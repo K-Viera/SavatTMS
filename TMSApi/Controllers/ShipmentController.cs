@@ -8,10 +8,12 @@ namespace TMSApi;
 public class ShipmentController : ControllerBase
 {
     private readonly IShipmentService _shipmentService;
+    private readonly ILogger<ShipmentController> _logger;
 
-    public ShipmentController(IShipmentService shipmentService)
+    public ShipmentController(IShipmentService shipmentService, ILogger<ShipmentController> logger)
     {
         _shipmentService = shipmentService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -20,10 +22,12 @@ public class ShipmentController : ControllerBase
         try
         {
             var shipments = await _shipmentService.GetAllAsync();
+            _logger.LogInformation("All shipments were retrieved");
             return Ok(shipments);
         }
         catch  (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while getting all shipments");
             return StatusCode(500, "An error occurred while processing your request.");
         }
     }
@@ -36,12 +40,15 @@ public class ShipmentController : ControllerBase
             var shipment = await _shipmentService.GetByTrackingNumberAsync(trackingNumber);
             if (shipment == null)
             {
+                _logger.LogWarning($"Shipment with tracking number {trackingNumber} was not found");
                 return NotFound();
             }
+            _logger.LogInformation($"Shipment with tracking number {trackingNumber} was retrieved");
             return Ok(shipment);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while getting shipment by tracking number");
             return StatusCode(500, "An error occurred while processing your request.");
         }
     }
@@ -52,14 +59,17 @@ public class ShipmentController : ControllerBase
         try
         {
             await _shipmentService.AddAsync(shipment);
+            _logger.LogInformation($"Shipment with tracking number {shipment.TrackingNumber} was added");
             return CreatedAtAction(nameof(GetByTrackingNumber), new { trackingNumber = shipment.TrackingNumber }, shipment);
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning(ex, "An error occurred while adding a shipment");
             return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while adding a shipment");
             return StatusCode(500, "An error occurred while processing your request.");
         }
     }
@@ -79,6 +89,7 @@ public class ShipmentController : ControllerBase
                 return Ok("No changes made");
             }
             await _shipmentService.UpdateAsync(existingShipment);
+            _logger.LogInformation($"Shipment with tracking number {trackingNumber} was updated");
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -97,6 +108,7 @@ public class ShipmentController : ControllerBase
         try
         {
             await _shipmentService.DeleteByTrackingNumberAsync(trackingNumber);
+            _logger.LogInformation($"Shipment with tracking number {trackingNumber} was deleted");
             return Ok();
         }
         catch (InvalidOperationException ex)
@@ -105,6 +117,7 @@ public class ShipmentController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while deleting a shipment");
             return StatusCode(500, "An error occurred while processing your request.");
         }
     }
@@ -122,11 +135,12 @@ public class ShipmentController : ControllerBase
         try
         {
             var shipments = await _shipmentService.SearchAsync(weight, shippingDate, deliveryDate, origin, destination,status);
+            _logger.LogInformation($"Shipments were searched, fond {shipments.Count()} shipments");
             return Ok(shipments);
         }
         catch (Exception ex)
         {
-            // Log the exception details
+            _logger.LogError(ex, "An error occurred while searching shipments");
             return StatusCode(500, "An error occurred while processing your request.");
         }
     }
