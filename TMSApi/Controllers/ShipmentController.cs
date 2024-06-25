@@ -108,6 +108,28 @@ public class ShipmentController : ControllerBase
             return StatusCode(500, "An error occurred while processing your request.");
         }
     }
+    
+    [HttpGet("search")]
+    public async Task<IActionResult> Search(
+        [FromQuery] decimal? weight, 
+        [FromQuery] DateTime? shippingDate, 
+        [FromQuery] DateTime? deliveryDate, 
+        [FromQuery] string? origin, 
+        [FromQuery] string? destination,
+        [FromQuery] string? status
+        )
+    {
+        try
+        {
+            var shipments = await _shipmentService.SearchAsync(weight, shippingDate, deliveryDate, origin, destination,status);
+            return Ok(shipments);
+        }
+        catch (Exception ex)
+        {
+            // Log the exception details
+            return StatusCode(500, "An error occurred while processing your request.");
+        }
+    }
 
     private bool UpdateIfNecessary(ShipmentDTO shipment, UpdateShipmentRequest updateShipmentRequest)
     {
