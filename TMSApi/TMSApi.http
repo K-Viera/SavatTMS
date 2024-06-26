@@ -1,6 +1,0 @@
-@TMSApi_HostAddress = http://localhost:5139
-
-GET {{TMSApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
